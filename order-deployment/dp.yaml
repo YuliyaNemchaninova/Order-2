@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-deployment
+  labels:
+    app: order
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+      - name: order
+        image: ynemchaninova/order:1.0
+        ports:
+        - containerPort: 8000
+        env:
+          # Define the environment variable
+          - name: SPRING_DATASOURCE_URL # Notice that the case is different here
+            # from the key name in the ConfigMap.
+            valueFrom:
+              configMapKeyRef:
+                name: order-config-map           # The ConfigMap this value comes from.
+                key: SPRING_DATASOURCE_URL # The key to fetch.
+          - name: API_URL_BOOK_ITEM
+            valueFrom:
+              configMapKeyRef:
+                name: order-config-map 
+                key: API_URL_BOOK_ITEM
+          - name: API_URL_CANCEL_BOOKING
+            valueFrom:
+              configMapKeyRef:
+                name: order-config-map 
+                key: API_URL_CANCEL_BOOKING
+          - name: API_URL_CREATE_PAYMENT
+            valueFrom:
+              configMapKeyRef:
+                name: order-config-map 
+                key: API_URL_CREATE_PAYMENT
+          - name: SPRING_DATASOURCE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: order-secret
+                key: SPRING_DATASOURCE_USERNAME
+          - name: SPRING_DATASOURCE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: order-secret
+                key:  SPRING_DATASOURCE_PASSWORD
+
+
+
+

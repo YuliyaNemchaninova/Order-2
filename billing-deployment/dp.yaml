@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-deployment
+  labels:
+    app: billing
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: billing
+  template:
+    metadata:
+      labels:
+        app: billing
+    spec:
+      containers:
+      - name: billing
+        image: ynemchaninova/billing:1.0
+        ports:
+        - containerPort: 8090
+        env:
+          # Define the environment variable
+          - name: SPRING_DATASOURCE_URL # Notice that the case is different here
+            # from the key name in the ConfigMap.
+            valueFrom:
+              configMapKeyRef:
+                name: billing-config-map           # The ConfigMap this value comes from.
+                key: SPRING_DATASOURCE_URL # The key to fetch.
+          - name: SPRING_DATASOURCE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: billing-secret
+                key: SPRING_DATASOURCE_USERNAME
+          - name: SPRING_DATASOURCE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: billing-secret
+                key:  SPRING_DATASOURCE_PASSWORD
+
+
+
+

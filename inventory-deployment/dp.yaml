@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-deployment
+  labels:
+    app: inventory
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: inventory
+  template:
+    metadata:
+      labels:
+        app: inventory
+    spec:
+      containers:
+      - name: inventory
+        image: ynemchaninova/inventory:2.0
+        ports:
+        - containerPort: 8091
+        env:
+          # Define the environment variable
+          - name: SPRING_DATASOURCE_URL # Notice that the case is different here
+            # from the key name in the ConfigMap.
+            valueFrom:
+              configMapKeyRef:
+                name: inventory-config-map           # The ConfigMap this value comes from.
+                key: SPRING_DATASOURCE_URL # The key to fetch.
+          - name: SPRING_DATASOURCE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: inventory-secret
+                key: SPRING_DATASOURCE_USERNAME
+          - name: SPRING_DATASOURCE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: inventory-secret
+                key:  SPRING_DATASOURCE_PASSWORD
+
+
+
+

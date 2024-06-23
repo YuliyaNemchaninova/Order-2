@@ -1,0 +1,442 @@
+{
+	"info": {
+		"_postman_id": "1a3a2090-0e81-4a6a-bad8-480e059fdf1b",
+		"name": "Order-2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33343833"
+	},
+	"item": [
+		{
+			"name": "добавить счет",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"    var jsonData = pm.response.json();\r",
+							"pm.collectionVariables.set(\"balance\", jsonData.balance)\r",
+							"    pm.collectionVariables.set(\"clientId\", jsonData.clientId)"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"clientId\": {{$randomInt}},\r\n    \"balance\": 100\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{billingUrl}}/accounts",
+					"host": [
+						"{{billingUrl}}"
+					],
+					"path": [
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Добавить товар",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"total\", pm.variables.replaceIn(10))"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"    var jsonData = pm.response.json();\r",
+							"    pm.collectionVariables.set(\"itemId\", jsonData.id)\r",
+							"     pm.collectionVariables.set(\"available\", jsonData.available)"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"total\": 10\n}\n\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{inventoryUrl}}/items",
+					"host": [
+						"{{inventoryUrl}}"
+					],
+					"path": [
+						"items"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Добавить заказ 1 (есть товар, есть деньги)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"totalSum\", pm.variables.replaceIn(1))\r",
+							"pm.collectionVariables.set(\"orderQuantity\", pm.variables.replaceIn(1))\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.collectionVariables.set(\"orderId\", jsonData.orderId)\r",
+							"\r",
+							"pm.test(\"check new order\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderId\": {{$randomInt}},\n    \"clientId\": {{clientId}},\n    \"itemId\": {{itemId}},\n    \"orderQuantity\": {{orderQuantity}},\n    \"totalSum\": {{totalSum}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/orders",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"orders"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Проверить баланс (успешный заказ)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"check balance\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"\r",
+							"    pm.expect(jsonData.balance).to.eql(pm.collectionVariables.get(\"balance\") - pm.collectionVariables.get(\"totalSum\"))\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"balance\", jsonData.balance)"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{billingUrl}}/accounts/byClientId/{{clientId}}",
+					"host": [
+						"{{billingUrl}}"
+					],
+					"path": [
+						"accounts",
+						"byClientId",
+						"{{clientId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Проверить товар (успешный заказ)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"check available\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"\r",
+							"    pm.expect(jsonData.available).to.eql(pm.collectionVariables.get(\"total\") - pm.collectionVariables.get(\"orderQuantity\"))\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"available\", jsonData.available)"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{inventoryUrl}}/items/{{itemId}}",
+					"host": [
+						"{{inventoryUrl}}"
+					],
+					"path": [
+						"items",
+						"{{itemId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Добавить заказ 1",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"totalSum\", pm.variables.replaceIn(1))\r",
+							"pm.collectionVariables.set(\"orderQuantity\", pm.variables.replaceIn(1))\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.collectionVariables.set(\"orderId\", jsonData.orderId)\r",
+							"\r",
+							"pm.test(\"check new order\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderId\": {{orderId}},\n    \"clientId\": {{clientId}},\n    \"itemId\": {{itemId}},\n    \"orderQuantity\": {{orderQuantity}},\n    \"totalSum\": {{totalSum}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/orders",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"orders"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Проверить баланс (повторный заказ)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"check balance\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"    \r",
+							"    pm.expect(jsonData.balance).to.eql(pm.collectionVariables.get(\"balance\"))\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"balance\", jsonData.balance)"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{billingUrl}}/accounts/byClientId/{{clientId}}",
+					"host": [
+						"{{billingUrl}}"
+					],
+					"path": [
+						"accounts",
+						"byClientId",
+						"{{clientId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Проверить товар (повторный заказ)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"check available\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"\r",
+							"    pm.expect(jsonData.available).to.eql(pm.collectionVariables.get(\"available\"))\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{inventoryUrl}}/items/{{itemId}}",
+					"host": [
+						"{{inventoryUrl}}"
+					],
+					"path": [
+						"items",
+						"{{itemId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Получить все заказы",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// pm.collectionVariables.set(\"firstName\", pm.variables.replaceIn('{{$randomFirstName}}'))"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderId\": 1,\n    \"clientId\": {{$randomInt}},\n    \"itemId\": {{$randomInt}},\n    \"orderQuantity\": {{$randomInt}},\n    \"totalSum\": {{$randomInt}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/orders",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"orders"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "itemId",
+			"value": ""
+		},
+		{
+			"key": "balance",
+			"value": ""
+		},
+		{
+			"key": "clientId",
+			"value": ""
+		},
+		{
+			"key": "available",
+			"value": ""
+		},
+		{
+			"key": "totalSum",
+			"value": ""
+		},
+		{
+			"key": "orderQuantity",
+			"value": ""
+		},
+		{
+			"key": "total",
+			"value": ""
+		},
+		{
+			"key": "orderId",
+			"value": ""
+		}
+	]
+}

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inventory-config-map
+data:
+  # property-like keys; each key maps to a simple value
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql-dev.default.svc.cluster.local:5432/app_db
